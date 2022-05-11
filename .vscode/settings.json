@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "dominoespoker",
+            "database": "${workspaceFolder:data_service}/data/database.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

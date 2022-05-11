@@ -1,7 +1,9 @@
 package models
 
 type Gamer struct {
-	UserId int64 `gorm:"primarykey"`
-	Nick   string
-	Name   string
+	ID    uint   `gorm:"primary_key;AUTO_INCREMENT"`
+	Ident string `gorm:"uniqueIndex"`
+	Nick  string
+	Name  string
+	Games []Game `gorm:"foreignKey:OwnerID"`
 }
