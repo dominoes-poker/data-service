@@ -12,7 +12,7 @@ func GetGames(c *fiber.Ctx) error {
 	var games []models.Game
 
 	// find all games in the database
-	db.DB.Find(&games)
+	db.DB.Find(&games).Association("gamers")
 
 	// Else return games
 	return c.JSON(fiber.Map{"status": "success", "message": "Games Found", "data": games})

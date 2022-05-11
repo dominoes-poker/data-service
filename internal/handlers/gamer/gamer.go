@@ -7,15 +7,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetGamers(c *fiber.Ctx) error {
+func GetGamers(ctx *fiber.Ctx) error {
 	db := database.GetInstance()
 	var gamers []models.Gamer
 
 	// find all gamers in the database
-	db.DB.Find(&gamers)
+	result := db.DB.Set("gorm:auto_preload", true).Find(&gamers)
+	if result.Error != nil {
+		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot do select", "data": result.Error})
+	}
 
 	// Else return gamers
-	return c.JSON(fiber.Map{"status": "success", "message": "Gamers Found", "data": gamers})
+	return ctx.JSON(fiber.Map{"status": "success", "message": "Gamers Found", "data": gamers})
 }
 
 func CreateGamer(c *fiber.Ctx) error {

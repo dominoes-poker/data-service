@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Data API",
+            "type": "go",
+            "request": "launch",
+            "program": "main.go",
+            "console": "integratedTerminal",
+        }
+    ]
+}
