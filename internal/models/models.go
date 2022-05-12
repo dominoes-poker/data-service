@@ -1,9 +1,8 @@
 package models
 
 type Game struct {
-	ID      uint  `json:"id" gorm:"primarykey;AUTO_INCREMENT"`
-	OwnerID uint  `json:"owner_id"`
-	Owner   Gamer `json:"owner" gorm:"foreignkey:OwnerID;`
+	ID      uint `json:"id" gorm:"primarykey;AUTO_INCREMENT"`
+	OwnerID uint `json:"owner_id"`
 }
 
 type Gamer struct {

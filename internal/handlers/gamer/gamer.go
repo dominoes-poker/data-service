@@ -12,7 +12,7 @@ func GetGamers(ctx *fiber.Ctx) error {
 	var gamers []models.Gamer
 
 	// find all gamers in the database
-	result := db.DB.Set("gorm:auto_preload", true).Find(&gamers)
+	result := db.DB.Preload("Games").Find(&gamers)
 	if result.Error != nil {
 		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot do select", "data": result.Error})
 	}
