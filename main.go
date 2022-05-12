@@ -2,12 +2,13 @@ package main
 
 import (
 	"data_service/config"
+	"data_service/database"
 )
 
 func main() {
 	db_url := config.Config("DB_URL")
-	setup_database(db_url)
+	database.SetupDatabase(db_url)
 
-	app := create_app()
+	app := CreateApp()
 	app.Listen(":3000")
 }

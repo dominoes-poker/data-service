@@ -1,7 +1,7 @@
 package gamerRoutes
 
 import (
-	gamerHandler "data_service/internal/handlers/gamer"
+	gamerHandler "data_service/handlers/gamer"
 
 	fiber "github.com/gofiber/fiber/v2"
 )

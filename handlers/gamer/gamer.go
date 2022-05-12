@@ -2,7 +2,7 @@ package gamerHandler
 
 import (
 	"data_service/database"
-	"data_service/internal/models"
+	"data_service/models"
 
 	"github.com/gofiber/fiber/v2"
 )

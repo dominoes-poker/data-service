@@ -6,6 +6,8 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"data_service/models"
 )
 
 type DataBase struct {
@@ -45,4 +47,11 @@ func (db *DataBase) InitializeTables(models ...interface{}) {
 
 func (db *DataBase) Create(model interface{}) *gorm.DB {
 	return db.DB.Create(model)
+}
+
+func SetupDatabase(db_url string) *DataBase {
+	db := GetInstance()
+	db.Connect(db_url)
+	db.InitializeTables(models.Gamer{}, models.Game{})
+	return db
 }

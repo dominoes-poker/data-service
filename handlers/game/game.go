@@ -2,8 +2,7 @@ package gamerHandler
 
 import (
 	"data_service/database"
-	"data_service/internal/models"
-	"fmt"
+	"data_service/models"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -60,7 +59,7 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 	}{}
 
 	if err := ctx.BodyParser(&payload); err != nil {
-		fmt.Println("Ацтой")
+		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot parse the body", "data": err})
 	}
 
 	var game models.Game
