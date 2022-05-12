@@ -9,8 +9,13 @@ import (
 func SetupGameRoutes(router fiber.Router) {
 	gamer := router.Group("/game")
 
-	// Create a Gamer
+	// Create a Game
 	gamer.Post("/", gameHandler.CreateGame)
-	// Read all Gamers
-	gamer.Get("/", gameHandler.GetGames)
+	// Read all Games
+	gamer.Get("/", gameHandler.GetAllGames)
+	// Read the Game with specified id
+	gamer.Get("/:id", gameHandler.GetGame)
+	// Add gamers to the game
+	gamer.Post("/:id/add-gamers", gameHandler.AddGamersToGame)
+
 }

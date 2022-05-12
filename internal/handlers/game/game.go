@@ -3,20 +3,10 @@ package gamerHandler
 import (
 	"data_service/database"
 	"data_service/internal/models"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-func GetGames(c *fiber.Ctx) error {
-	db := database.GetInstance()
-	var games []models.Game
-
-	// find all games in the database
-	db.DB.Find(&games)
-
-	// Else return games
-	return c.JSON(fiber.Map{"status": "success", "message": "Games Found", "data": games})
-}
 
 func CreateGame(c *fiber.Ctx) error {
 	db := database.GetInstance()
@@ -34,4 +24,60 @@ func CreateGame(c *fiber.Ctx) error {
 
 	// Return the created note
 	return c.JSON(fiber.Map{"status": "success", "message": "Created game", "data": game})
+}
+
+func GetAllGames(ctx *fiber.Ctx) error {
+	db := database.GetInstance()
+	var games []models.Game
+
+	// find all games in the database
+	result := db.DB.Preload("Gamers").Find(&games)
+	if result.Error != nil {
+		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	}
+	// Else return games
+	return ctx.JSON(fiber.Map{"status": "success", "message": "Games Found", "data": games})
+}
+
+func GetGame(ctx *fiber.Ctx) error {
+	db := database.GetInstance()
+	var game models.Game
+
+	gameId := ctx.Params("gameId")
+
+	result := db.DB.First(&game, gameId)
+	if result.Error != nil {
+		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	}
+
+	// Else return games
+	return ctx.JSON(fiber.Map{"status": "success", "message": "Game Found", "data": game})
+}
+
+func AddGamersToGame(ctx *fiber.Ctx) error {
+	payload := struct {
+		GamerIds []int `json:"gamerIds"`
+	}{}
+
+	if err := ctx.BodyParser(&payload); err != nil {
+		fmt.Println("Ацтой")
+	}
+
+	var game models.Game
+	gamers := make([]models.Gamer, len(payload.GamerIds))
+	gameId := ctx.Params("gameId")
+	db := database.GetInstance()
+
+	if result := db.DB.First(&game, gameId); result.Error != nil {
+		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	}
+
+	for index, gamerId := range payload.GamerIds {
+		gamers[index].ID = uint(gamerId)
+	}
+
+	assosiation := db.DB.Model(&game).Association("Gamers")
+	assosiation.Append(gamers)
+
+	return ctx.JSON(fiber.Map{"status": "success", "message": "Created game"})
 }
