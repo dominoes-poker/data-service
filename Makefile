@@ -3,3 +3,6 @@ build:
 
 run: build
 	./bin/server
+
+unittests:
+	go test -v ./...
