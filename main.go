@@ -11,5 +11,7 @@ func main() {
 	database.SetupDatabase(db_url)
 
 	app := CreateApp()
-	app.Listen(":3000")
+	if err := app.Listen(":3000"); err != nil {
+		panic("Cannot run application")
+	}
 }

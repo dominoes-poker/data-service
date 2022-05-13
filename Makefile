@@ -1,15 +1,19 @@
 COMPILER 		:= go
+LINTER	 		:= golangci-lint
+VERBOSE_FLAG	:= -v
+
 BIN_FOLDER 		:= ./bin
 BIN_FILE_PATH 	:= $(BIN_FOLDER)/data_service
 
-prepare:
-	mkdir -p $(BIN_FOLDER)
 
-build: prepare
-	$(COMPILER) build -o $(BIN_FOLDER) ./...
+build:
+	$(COMPILER) build -o $(BIN_FOLDER) $(VERBOSE_FLAG) ./...
 
 run: build
 	$(BIN_FILE_PATH)
 
 test:
-	$(COMPILER) test ./...
+	$(COMPILER) test $(VERBOSE_FLAG) ./...
+
+lint: 
+	$(LINTER) run $(VERBOSE_FLAG) ./...
