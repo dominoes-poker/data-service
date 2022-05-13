@@ -5,7 +5,7 @@
             "name": "Data API",
             "type": "go",
             "request": "launch",
-            "program": "main.go",
+            "program": "./",
             "console": "integratedTerminal",
         }
     ]
