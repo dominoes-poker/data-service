@@ -1,8 +1,13 @@
+COMPILER 		:= go
+BIN_FOLDER 		:= ./bin
+BIN_FILE_PATH 	:= $(BIN_FOLDER)/data_service
+
+
 build:
-	go build -o bin/server main.go app.go
+	$(COMPILER) build -o $(BIN_FOLDER) ./...
 
 run: build
-	./bin/server
+	$(BIN_FILE_PATH)
 
-unittests:
-	go test -v ./...
+test:
+	$(COMPILER) test ./...
