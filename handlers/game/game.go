@@ -76,7 +76,7 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 
 	assosiation := db.DB.Model(&game).Association("Gamers")
 
-	if err := assosiation.Append(gamers).Error; err != nil {
+	if err := assosiation.Append(gamers); err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 
