@@ -29,19 +29,19 @@ func (db *DataBase) Connect(databaseConnection string) {
 
 	db.DB, err = gorm.Open(sqlite.Open(databaseConnection))
 	if err != nil {
-		panic("Failed to connect database")
+		panic("Failed to connect database.")
 	}
 
 	if res := db.DB.Exec("PRAGMA foreign_keys = ON", nil); res.Error != nil {
-		panic("Failed to enable foreign keys")
+		panic("Failed to enable foreign keys.")
 	}
 
-	fmt.Println("Connection Opened to Database")
+	fmt.Println("Connection to the Database is opened.")
 }
 
 func (db *DataBase) InitializeTables(models ...interface{}) {
 	if err := db.DB.AutoMigrate(models...); err != nil {
-		panic("Migration Failed")
+		panic("Migration failed.")
 	}
 }
 

@@ -2,27 +2,28 @@ package gamerHandler
 
 import (
 	"data_service/database"
+	"data_service/handlers/results"
 	"data_service/models"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateGame(c *fiber.Ctx) error {
+func CreateGame(ctx *fiber.Ctx) error {
 	db := database.GetInstance()
 	game := new(models.Game)
 
 	// Store the body in the Game and return error if encountered
-	if err := c.BodyParser(game); err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Review your input", "data": err})
+	if err := ctx.BodyParser(game); err != nil {
+		return results.BadRequestResult(ctx, "Bad request body", err)
 	}
 
 	// Create the Game and return error if encountered
 	if err := db.Create(&game).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create game", "data": err})
+		return results.ServerErrorResult(ctx, "Could not create game", err)
 	}
 
 	// Return the created note
-	return c.JSON(fiber.Map{"status": "success", "message": "Created game", "data": game})
+	return results.OkResult(ctx, "Created game", game)
 }
 
 func GetAllGames(ctx *fiber.Ctx) error {
@@ -30,12 +31,11 @@ func GetAllGames(ctx *fiber.Ctx) error {
 	var games []models.Game
 
 	// find all games in the database
-	result := db.DB.Preload("Gamers").Find(&games)
-	if result.Error != nil {
-		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	if err := db.DB.Preload("Gamers").Find(&games).Error; err != nil {
+		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 	// Else return games
-	return ctx.JSON(fiber.Map{"status": "success", "message": "Games Found", "data": games})
+	return results.OkResult(ctx, "Games Found", games)
 }
 
 func GetGame(ctx *fiber.Ctx) error {
@@ -44,13 +44,12 @@ func GetGame(ctx *fiber.Ctx) error {
 
 	gameId := ctx.Params("gameId")
 
-	result := db.DB.First(&game, gameId)
-	if result.Error != nil {
-		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	if err := db.DB.First(&game, gameId); err != nil {
+		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 
 	// Else return games
-	return ctx.JSON(fiber.Map{"status": "success", "message": "Game Found", "data": game})
+	return results.OkResult(ctx, "Game Found", game)
 }
 
 func AddGamersToGame(ctx *fiber.Ctx) error {
@@ -59,7 +58,7 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 	}{}
 
 	if err := ctx.BodyParser(&payload); err != nil {
-		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot parse the body", "data": err})
+		return results.BadRequestResult(ctx, "Bad request body", err)
 	}
 
 	var game models.Game
@@ -67,8 +66,8 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 	gameId := ctx.Params("gameId")
 	db := database.GetInstance()
 
-	if result := db.DB.First(&game, gameId); result.Error != nil {
-		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot make a select opration", "data": result.Error})
+	if err := db.DB.First(&game, gameId).Error; err != nil {
+		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 
 	for index, gamerId := range payload.GamerIds {
@@ -78,5 +77,5 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 	assosiation := db.DB.Model(&game).Association("Gamers")
 	assosiation.Append(gamers)
 
-	return ctx.JSON(fiber.Map{"status": "success", "message": "Created game"})
+	return results.OkResult(ctx, "Created game", game)
 }

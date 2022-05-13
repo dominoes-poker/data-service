@@ -2,6 +2,7 @@ package gamerHandler
 
 import (
 	"data_service/database"
+	"data_service/handlers/results"
 	"data_service/models"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,29 +13,29 @@ func GetGamers(ctx *fiber.Ctx) error {
 	var gamers []models.Gamer
 
 	// find all gamers in the database
-	result := db.DB.Preload("OwnedGames").Find(&gamers)
-	if result.Error != nil {
-		return ctx.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot do select", "data": result.Error})
+
+	if err := db.DB.Preload("OwnedGames").Find(&gamers).Error; err != nil {
+		return results.BadRequestResult(ctx, "Cannot make a select opration", err)
 	}
 
 	// Else return gamers
-	return ctx.JSON(fiber.Map{"status": "success", "message": "Gamers Found", "data": gamers})
+	return results.OkResult(ctx, "Gamers Found", gamers)
 }
 
-func CreateGamer(c *fiber.Ctx) error {
+func CreateGamer(ctx *fiber.Ctx) error {
 	db := database.GetInstance()
 	gamer := new(models.Gamer)
 
 	// Store the body in the Gamer and return error if encountered
-	if err := c.BodyParser(gamer); err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Review your input", "data": err})
+	if err := ctx.BodyParser(gamer); err != nil {
+		return results.BadRequestResult(ctx, "Bad request body", err)
 	}
 
 	// Create the Gamer and return error if encountered
 	if err := db.Create(&gamer).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create gamer", "data": err})
+		return results.ServerErrorResult(ctx, "Could not create a gamer", err)
 	}
 
 	// Return the created note
-	return c.JSON(fiber.Map{"status": "success", "message": "Created gamer", "data": gamer})
+	return results.OkResult(ctx, "Created gamer", gamer)
 }
