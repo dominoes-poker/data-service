@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetGamers(ctx *fiber.Ctx) error {
+func GetAllGamers(ctx *fiber.Ctx) error {
 	db := database.GetInstance()
 	var gamers []models.Gamer
 
@@ -20,6 +20,21 @@ func GetGamers(ctx *fiber.Ctx) error {
 
 	// Else return gamers
 	return results.OkResult(ctx, "Gamers Found", gamers)
+}
+
+func GetGamer(ctx *fiber.Ctx) error {
+	db := database.GetInstance()
+	var gamer models.Gamer
+
+	gamerId := ctx.Params("gameId")
+	// find all gamers in the database
+
+	if err := db.DB.Preload("OwnedGames").First(&gamer, gamerId).Error; err != nil {
+		return results.BadRequestResult(ctx, "Cannot make a select opration", err)
+	}
+
+	// Else return gamers
+	return results.OkResult(ctx, "Gamer Found", gamer)
 }
 
 func CreateGamer(ctx *fiber.Ctx) error {

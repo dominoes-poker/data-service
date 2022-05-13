@@ -44,7 +44,7 @@ func GetGame(ctx *fiber.Ctx) error {
 
 	gameId := ctx.Params("gameId")
 
-	if err := db.DB.First(&game, gameId); err != nil {
+	if err := db.DB.Preload("Gamers").First(&game, gameId).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 

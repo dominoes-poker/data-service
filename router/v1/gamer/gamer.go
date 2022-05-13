@@ -12,5 +12,7 @@ func SetupGamerRoutes(router fiber.Router) {
 	// Create a Gamer
 	gamer.Post("/", gamerHandler.CreateGamer)
 	// Read all Gamers
-	gamer.Get("/", gamerHandler.GetGamers)
+	gamer.Get("/", gamerHandler.GetAllGamers)
+	// Read Gamer
+	gamer.Get("/:id", gamerHandler.GetGamer)
 }
