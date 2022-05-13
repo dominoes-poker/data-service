@@ -4,12 +4,26 @@ import (
 	"data_service/database"
 	"data_service/handlers/results"
 	"data_service/models"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateGame(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+type GameHandler struct {
+	db *database.DataBase
+}
+
+var instance *GameHandler
+var gameRouterOnce sync.Once
+
+func New(db *database.DataBase) *GameHandler {
+	gameRouterOnce.Do(func() {
+		instance = &GameHandler{db}
+	})
+	return instance
+}
+
+func (handler *GameHandler) Create(ctx *fiber.Ctx) error {
 	game := new(models.Game)
 
 	// Store the body in the Game and return error if encountered
@@ -18,7 +32,7 @@ func CreateGame(ctx *fiber.Ctx) error {
 	}
 
 	// Create the Game and return error if encountered
-	if err := db.Create(&game).Error; err != nil {
+	if err := handler.db.Create(&game).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Could not create game", err)
 	}
 
@@ -26,25 +40,23 @@ func CreateGame(ctx *fiber.Ctx) error {
 	return results.OkResult(ctx, "Created game", game)
 }
 
-func GetAllGames(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+func (handler *GameHandler) GetAll(ctx *fiber.Ctx) error {
 	var games []models.Game
 
 	// find all games in the database
-	if err := db.DB.Preload("Gamers").Find(&games).Error; err != nil {
+	if err := handler.db.DB.Preload("Gamers").Find(&games).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 	// Else return games
 	return results.OkResult(ctx, "Games Found", games)
 }
 
-func GetGame(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+func (handler *GameHandler) GetOne(ctx *fiber.Ctx) error {
 	var game models.Game
 
 	gameId := ctx.Params("gameId")
 
-	if err := db.DB.Preload("Gamers").First(&game, gameId).Error; err != nil {
+	if err := handler.db.DB.Preload("Gamers").First(&game, gameId).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 
@@ -52,7 +64,7 @@ func GetGame(ctx *fiber.Ctx) error {
 	return results.OkResult(ctx, "Game Found", game)
 }
 
-func AddGamersToGame(ctx *fiber.Ctx) error {
+func (handler *GameHandler) AddGamersToGame(ctx *fiber.Ctx) error {
 	payload := struct {
 		GamerIds []int `json:"gamerIds"`
 	}{}
@@ -64,9 +76,8 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 	var game models.Game
 	gamers := make([]models.Gamer, len(payload.GamerIds))
 	gameId := ctx.Params("gameId")
-	db := database.GetInstance()
 
-	if err := db.DB.First(&game, gameId).Error; err != nil {
+	if err := handler.db.DB.First(&game, gameId).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
 	}
 
@@ -74,7 +85,7 @@ func AddGamersToGame(ctx *fiber.Ctx) error {
 		gamers[index].ID = uint(gamerId)
 	}
 
-	assosiation := db.DB.Model(&game).Association("Gamers")
+	assosiation := handler.db.DB.Model(&game).Association("Gamers")
 
 	if err := assosiation.Append(gamers); err != nil {
 		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)

@@ -8,9 +8,9 @@ import (
 
 func main() {
 	db_url := config.Config(constants.ENV_FILE, constants.DB_URL_KEY_NAME)
-	database.SetupDatabase(db_url)
+	db := database.SetupDatabase(db_url)
 
-	app := CreateApp()
+	app := CreateApp(db)
 	if err := app.Listen(":3000"); err != nil {
 		panic("Cannot run application")
 	}

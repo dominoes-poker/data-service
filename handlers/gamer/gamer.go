@@ -4,17 +4,31 @@ import (
 	"data_service/database"
 	"data_service/handlers/results"
 	"data_service/models"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetAllGamers(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+type GamerHandler struct {
+	db *database.DataBase
+}
+
+var instance *GamerHandler
+var gameRouterOnce sync.Once
+
+func New(db *database.DataBase) *GamerHandler {
+	gameRouterOnce.Do(func() {
+		instance = &GamerHandler{db}
+	})
+	return instance
+}
+
+func (handler *GamerHandler) GetAll(ctx *fiber.Ctx) error {
 	var gamers []models.Gamer
 
 	// find all gamers in the database
 
-	if err := db.DB.Preload("OwnedGames").Find(&gamers).Error; err != nil {
+	if err := handler.db.DB.Preload("OwnedGames").Find(&gamers).Error; err != nil {
 		return results.BadRequestResult(ctx, "Cannot make a select opration", err)
 	}
 
@@ -22,14 +36,13 @@ func GetAllGamers(ctx *fiber.Ctx) error {
 	return results.OkResult(ctx, "Gamers Found", gamers)
 }
 
-func GetGamer(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+func (handler *GamerHandler) GetOne(ctx *fiber.Ctx) error {
 	var gamer models.Gamer
 
 	gamerId := ctx.Params("gameId")
 	// find all gamers in the database
 
-	if err := db.DB.Preload("OwnedGames").First(&gamer, gamerId).Error; err != nil {
+	if err := handler.db.DB.Preload("OwnedGames").First(&gamer, gamerId).Error; err != nil {
 		return results.BadRequestResult(ctx, "Cannot make a select opration", err)
 	}
 
@@ -37,8 +50,7 @@ func GetGamer(ctx *fiber.Ctx) error {
 	return results.OkResult(ctx, "Gamer Found", gamer)
 }
 
-func CreateGamer(ctx *fiber.Ctx) error {
-	db := database.GetInstance()
+func (handler *GamerHandler) Create(ctx *fiber.Ctx) error {
 	gamer := new(models.Gamer)
 
 	// Store the body in the Gamer and return error if encountered
@@ -47,7 +59,7 @@ func CreateGamer(ctx *fiber.Ctx) error {
 	}
 
 	// Create the Gamer and return error if encountered
-	if err := db.Create(&gamer).Error; err != nil {
+	if err := handler.db.Create(&gamer).Error; err != nil {
 		return results.ServerErrorResult(ctx, "Could not create a gamer", err)
 	}
 

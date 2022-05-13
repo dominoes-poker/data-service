@@ -1,15 +1,16 @@
 package router
 
 import (
-	gameRoutes "data_service/router/v1/game"
+	"data_service/database"
+	gameRouter "data_service/router/v1/game"
 	gamerRoutes "data_service/router/v1/gamer"
 
 	fiber "github.com/gofiber/fiber/v2"
-	logger "github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func SetupRoutes(app *fiber.App) {
-	api := app.Group("/api", logger.New())
-	gamerRoutes.SetupGamerRoutes(api)
-	gameRoutes.SetupGameRoutes(api)
+func SetupRoutes(rootRouter fiber.Router, db *database.DataBase) {
+	gameRootRouter := rootRouter.Group("/game")
+	gameRouter.Setup(gameRootRouter, db)
+	gamerRootRouter := rootRouter.Group("/gamer")
+	gamerRoutes.Setup(gamerRootRouter, db)
 }
