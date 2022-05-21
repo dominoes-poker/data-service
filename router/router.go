@@ -11,6 +11,7 @@ import (
 func SetupRoutes(rootRouter fiber.Router, db *database.DataBase) {
 	gameRootRouter := rootRouter.Group("/game")
 	gameRouter.Setup(gameRootRouter, db)
+
 	gamerRootRouter := rootRouter.Group("/gamer")
 	gamerRoutes.Setup(gamerRootRouter, db)
 }

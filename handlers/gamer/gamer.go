@@ -26,9 +26,10 @@ func New(db *database.DataBase) *GamerHandler {
 func (handler *GamerHandler) GetAll(ctx *fiber.Ctx) error {
 	var gamers []models.Gamer
 
+	identificator := ctx.Query("identificator")
 	// find all gamers in the database
 
-	if err := handler.db.DB.Preload("OwnedGames").Find(&gamers).Error; err != nil {
+	if err := handler.db.DB.Where("Identificator = ?", identificator).Preload("OwnedGames").Find(&gamers).Error; err != nil {
 		return results.BadRequestResult(ctx, "Cannot make a select opration", err)
 	}
 
@@ -39,7 +40,7 @@ func (handler *GamerHandler) GetAll(ctx *fiber.Ctx) error {
 func (handler *GamerHandler) GetOne(ctx *fiber.Ctx) error {
 	var gamer models.Gamer
 
-	gamerId := ctx.Params("gameId")
+	gamerId := ctx.Params("gamerIdentificator")
 	// find all gamers in the database
 
 	if err := handler.db.DB.Preload("OwnedGames").First(&gamer, gamerId).Error; err != nil {

@@ -16,7 +16,7 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 	})
 
 	// Read the Gamer with specified id
-	rootRouter.Get("/:id", func(ctx *fiber.Ctx) error {
+	rootRouter.Get("/:gamerId", func(ctx *fiber.Ctx) error {
 		return handler.GetOne(ctx)
 	})
 
