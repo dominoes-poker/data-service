@@ -16,8 +16,9 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 	})
 
 	// Read the Gamer with specified id
-	rootRouter.Get("/:gamerId", func(ctx *fiber.Ctx) error {
-		return handler.GetOne(ctx)
+	rootRouter.Get("/:gamerIdentificator", func(ctx *fiber.Ctx) error {
+		gamerIdentificator := ctx.Params("gamerIdentificator")
+		return handler.GetOne(gamerIdentificator, ctx)
 	})
 
 	// Create a Gamer

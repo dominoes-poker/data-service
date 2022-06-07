@@ -7,6 +7,8 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+
+	"gorm.io/gorm/clause"
 )
 
 type GameHandler struct {
@@ -23,62 +25,73 @@ func New(db *database.DataBase) *GameHandler {
 	return instance
 }
 
-func (handler *GameHandler) Create(ctx *fiber.Ctx) error {
+func (handler *GameHandler) getGame(gameId uint) (models.Game, error) {
+	var game models.Game
+	db := handler.db.DB
+
+	err := db.Preload(clause.Associations).Preload("Rounds.Stakes").Find(&game, gameId).Error
+	return game, err
+}
+
+func (handler *GameHandler) getAllGames() ([]models.Game, error) {
+	var games []models.Game
+	db := handler.db.DB
+
+	err := db.Preload(clause.Associations).Preload("Rounds.Stakes").Find(&games).Error
+	return games, err
+}
+
+func (handler *GameHandler) Create(context *fiber.Ctx) error {
 	game := new(models.Game)
 
 	// Store the body in the Game and return error if encountered
-	if err := ctx.BodyParser(game); err != nil {
-		return results.BadRequestResult(ctx, "Bad request body", err)
+	if err := context.BodyParser(game); err != nil {
+		return results.BadRequestResult(context, err)
 	}
 
 	// Create the Game and return error if encountered
 	if err := handler.db.Create(&game).Error; err != nil {
-		return results.ServerErrorResult(ctx, "Could not create game", err)
+		return results.ServerErrorResult(context, err)
 	}
 
-	// Return the created note
-	return results.OkResult(ctx, "Created game", game)
-}
-
-func (handler *GameHandler) GetAll(ctx *fiber.Ctx) error {
-	var games []models.Game
-
-	// find all games in the database
-	if err := handler.db.DB.Preload("Gamers").Find(&games).Error; err != nil {
-		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
+	if game, err := handler.getGame(game.ID); err != nil {
+		return results.ServerErrorResult(context, err)
+	} else {
+		return results.OkResult(context, game)
 	}
-	// Else return games
-	return results.OkResult(ctx, "Games Found", games)
 }
 
-func (handler *GameHandler) GetOne(ctx *fiber.Ctx) error {
-	var game models.Game
-
-	gameId := ctx.Params("gameId")
-
-	if err := handler.db.DB.Preload("Gamers").First(&game, gameId).Error; err != nil {
-		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
+func (handler *GameHandler) GetAll(context *fiber.Ctx) error {
+	if games, err := handler.getAllGames(); err != nil {
+		return results.ServerErrorResult(context, err)
+	} else {
+		return results.OkResult(context, games)
 	}
-
-	// Else return games
-	return results.OkResult(ctx, "Game Found", game)
 }
 
-func (handler *GameHandler) AddGamersToGame(ctx *fiber.Ctx) error {
+func (handler *GameHandler) GetOne(gameId uint, context *fiber.Ctx) error {
+
+	if game, err := handler.getGame(gameId); err != nil {
+		return results.ServerErrorResult(context, err)
+	} else {
+		return results.OkResult(context, game)
+	}
+}
+
+func (handler *GameHandler) AddGamersToGame(gameId uint, context *fiber.Ctx) error {
 	payload := struct {
 		GamerIds []int `json:"gamerIds"`
 	}{}
 
-	if err := ctx.BodyParser(&payload); err != nil {
-		return results.BadRequestResult(ctx, "Bad request body", err)
+	if err := context.BodyParser(&payload); err != nil {
+		return results.BadRequestResult(context, err)
 	}
 
 	var game models.Game
 	gamers := make([]models.Gamer, len(payload.GamerIds))
-	gameId := ctx.Params("gameId")
 
-	if err := handler.db.DB.First(&game, gameId).Error; err != nil {
-		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
+	if err := handler.db.DB.Preload("Gamers").Find(&game, gameId).Error; err != nil {
+		return results.ServerErrorResult(context, err)
 	}
 
 	for index, gamerId := range payload.GamerIds {
@@ -88,8 +101,67 @@ func (handler *GameHandler) AddGamersToGame(ctx *fiber.Ctx) error {
 	assosiation := handler.db.DB.Model(&game).Association("Gamers")
 
 	if err := assosiation.Append(gamers); err != nil {
-		return results.ServerErrorResult(ctx, "Cannot make a select opration", err)
+		return results.ServerErrorResult(context, err)
 	}
 
-	return results.OkResult(ctx, "Created game", game)
+	if err := handler.db.DB.Preload("Gamers").Find(&game, gameId).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	if game, err := handler.getGame(gameId); err != nil {
+		return results.ServerErrorResult(context, err)
+	} else {
+		return results.OkResult(context, game)
+	}
+}
+
+func (handler *GameHandler) StartRound(gameId uint, context *fiber.Ctx) error {
+	var round models.Round
+
+	if err := context.BodyParser(&round); err != nil {
+		return results.BadRequestResult(context, err)
+	}
+	var numberOfDoneRounds int64
+
+	round.GameID = uint(gameId)
+
+	if err := handler.db.DB.Model(&models.Round{}).Where("game_id = ?", gameId).Count(&numberOfDoneRounds).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	round.Number = uint(numberOfDoneRounds + 1)
+
+	if err := handler.db.Create(&round).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	return results.OkResult(context, round)
+}
+
+func (handler *GameHandler) MakeBet(gameId, roundNumber uint, context *fiber.Ctx) error {
+	db := handler.db.DB
+	var stake models.Stake
+
+	if err := context.BodyParser(&stake); err != nil {
+		return results.BadRequestResult(context, err)
+	}
+
+	var round models.Round
+
+	if err := db.Where("game_id = ?", gameId).Where("number = ?", roundNumber).Find(&round).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	stake.RoundID = round.ID
+
+	if err := db.Create(&stake).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	game, err := handler.getGame(gameId)
+	if err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	return results.OkResult(context, game)
 }
