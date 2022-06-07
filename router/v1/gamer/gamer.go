@@ -4,7 +4,7 @@ import (
 	"data_service/database"
 	gamerHandler "data_service/handlers/gamer"
 
-	fiber "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Setup(rootRouter fiber.Router, db *database.DataBase) {

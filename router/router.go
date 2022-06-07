@@ -5,7 +5,7 @@ import (
 	gameRouter "data_service/router/v1/game"
 	gamerRoutes "data_service/router/v1/gamer"
 
-	fiber "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
 )
 
 func SetupRoutes(rootRouter fiber.Router, db *database.DataBase) {
