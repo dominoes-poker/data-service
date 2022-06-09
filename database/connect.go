@@ -52,6 +52,6 @@ func (db *DataBase) Create(model interface{}) *gorm.DB {
 func SetupDatabase(db_url string) *DataBase {
 	db := GetInstance()
 	db.Connect(db_url)
-	db.InitializeTables(models.Gamer{}, models.Game{}, models.Round{}, models.Stake{})
+	db.InitializeTables(models.Player{}, models.Game{}, models.Round{}, models.Stake{})
 	return db
 }

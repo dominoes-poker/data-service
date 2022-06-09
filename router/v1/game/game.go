@@ -1,10 +1,10 @@
-package gamerRoutes
+package playerRoute
 
 import (
 	"data_service/database"
-	"data_service/handlers/common"
 	gameHandler "data_service/handlers/game"
 	"data_service/handlers/results"
+	routerUtils "data_service/router/common"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,7 +19,7 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 
 	// Read the Game with specified id
 	rootRouter.Get("/:gameId", func(ctx *fiber.Ctx) error {
-		gameId, err := common.GetUintParam(ctx, "gameId")
+		gameId, err := routerUtils.GetUintParam(ctx, "gameId")
 		if err != nil {
 			return results.BadRequestResult(ctx, err)
 		}
@@ -31,18 +31,18 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 		return handler.Create(ctx)
 	})
 
-	// Add gamers to the game
-	rootRouter.Post("/:gameId/add-gamers", func(ctx *fiber.Ctx) error {
-		gameId, err := common.GetUintParam(ctx, "gameId")
+	// Add players to the game
+	rootRouter.Post("/:gameId/add-players", func(ctx *fiber.Ctx) error {
+		gameId, err := routerUtils.GetUintParam(ctx, "gameId")
 		if err != nil {
 			return results.BadRequestResult(ctx, err)
 		}
-		return handler.AddGamersToGame(gameId, ctx)
+		return handler.AddPlayersToGame(gameId, ctx)
 	})
 
 	// Start a new round
 	rootRouter.Post("/:gameId/new-round", func(context *fiber.Ctx) error {
-		gameId, err := common.GetUintParam(context, "gameId")
+		gameId, err := routerUtils.GetUintParam(context, "gameId")
 		if err != nil {
 			return results.BadRequestResult(context, err)
 		}
@@ -52,12 +52,12 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 	// User make a bet
 	rootRouter.Post("/:gameId/round/:roundNumber/make-bet", func(context *fiber.Ctx) error {
 
-		gameId, err := common.GetUintParam(context, "gameId")
+		gameId, err := routerUtils.GetUintParam(context, "gameId")
 		if err != nil {
 			return results.BadRequestResult(context, err)
 		}
 
-		roundNumber, err := common.GetUintParam(context, "roundNumber")
+		roundNumber, err := routerUtils.GetUintParam(context, "roundNumber")
 		if err != nil {
 			return results.BadRequestResult(context, err)
 		}

@@ -1,4 +1,4 @@
-package gamerHandler
+package playerHandler
 
 import (
 	"data_service/database"
@@ -78,9 +78,9 @@ func (handler *GameHandler) GetOne(gameId uint, context *fiber.Ctx) error {
 	}
 }
 
-func (handler *GameHandler) AddGamersToGame(gameId uint, context *fiber.Ctx) error {
+func (handler *GameHandler) AddPlayersToGame(gameId uint, context *fiber.Ctx) error {
 	payload := struct {
-		GamerIds []int `json:"gamerIds"`
+		PlayerIds []int `json:"playerIds"`
 	}{}
 
 	if err := context.BodyParser(&payload); err != nil {
@@ -88,23 +88,23 @@ func (handler *GameHandler) AddGamersToGame(gameId uint, context *fiber.Ctx) err
 	}
 
 	var game models.Game
-	gamers := make([]models.Gamer, len(payload.GamerIds))
+	players := make([]models.Player, len(payload.PlayerIds))
 
-	if err := handler.db.DB.Preload("Gamers").Find(&game, gameId).Error; err != nil {
+	if err := handler.db.DB.Preload("Players").Find(&game, gameId).Error; err != nil {
 		return results.ServerErrorResult(context, err)
 	}
 
-	for index, gamerId := range payload.GamerIds {
-		gamers[index].ID = uint(gamerId)
+	for index, playerId := range payload.PlayerIds {
+		players[index].ID = uint(playerId)
 	}
 
-	assosiation := handler.db.DB.Model(&game).Association("Gamers")
+	assosiation := handler.db.DB.Model(&game).Association("Players")
 
-	if err := assosiation.Append(gamers); err != nil {
+	if err := assosiation.Append(players); err != nil {
 		return results.ServerErrorResult(context, err)
 	}
 
-	if err := handler.db.DB.Preload("Gamers").Find(&game, gameId).Error; err != nil {
+	if err := handler.db.DB.Preload("Players").Find(&game, gameId).Error; err != nil {
 		return results.ServerErrorResult(context, err)
 	}
 
