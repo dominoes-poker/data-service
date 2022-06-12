@@ -31,15 +31,6 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 		return handler.Create(ctx)
 	})
 
-	// Add players to the game
-	rootRouter.Post("/:gameId/add-players", func(ctx *fiber.Ctx) error {
-		gameId, err := routerUtils.GetUintParam(ctx, "gameId")
-		if err != nil {
-			return results.BadRequestResult(ctx, err)
-		}
-		return handler.AddPlayersToGame(gameId, ctx)
-	})
-
 	// Start a new round
 	rootRouter.Post("/:gameId/new-round", func(context *fiber.Ctx) error {
 		gameId, err := routerUtils.GetUintParam(context, "gameId")

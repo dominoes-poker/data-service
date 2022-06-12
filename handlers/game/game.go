@@ -54,6 +54,26 @@ func (handler *GameHandler) Create(context *fiber.Ctx) error {
 		return results.ServerErrorResult(context, err)
 	}
 
+	payload := struct {
+		PlayerIds []int `json:"playerIds"`
+	}{}
+
+	if err := context.BodyParser(&payload); err != nil {
+		return results.BadRequestResult(context, err)
+	}
+
+	players := make([]models.Player, len(payload.PlayerIds))
+
+	for index, playerId := range payload.PlayerIds {
+		players[index].ID = uint(playerId)
+	}
+
+	assosiation := handler.db.DB.Model(&game).Association("Players")
+
+	if err := assosiation.Append(players); err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
 	if game, err := handler.getGame(game.ID); err != nil {
 		return results.ServerErrorResult(context, err)
 	} else {
@@ -70,43 +90,6 @@ func (handler *GameHandler) GetAll(context *fiber.Ctx) error {
 }
 
 func (handler *GameHandler) GetOne(gameId uint, context *fiber.Ctx) error {
-
-	if game, err := handler.getGame(gameId); err != nil {
-		return results.ServerErrorResult(context, err)
-	} else {
-		return results.OkResult(context, game)
-	}
-}
-
-func (handler *GameHandler) AddPlayersToGame(gameId uint, context *fiber.Ctx) error {
-	payload := struct {
-		PlayerIds []int `json:"playerIds"`
-	}{}
-
-	if err := context.BodyParser(&payload); err != nil {
-		return results.BadRequestResult(context, err)
-	}
-
-	var game models.Game
-	players := make([]models.Player, len(payload.PlayerIds))
-
-	if err := handler.db.DB.Preload("Players").Find(&game, gameId).Error; err != nil {
-		return results.ServerErrorResult(context, err)
-	}
-
-	for index, playerId := range payload.PlayerIds {
-		players[index].ID = uint(playerId)
-	}
-
-	assosiation := handler.db.DB.Model(&game).Association("Players")
-
-	if err := assosiation.Append(players); err != nil {
-		return results.ServerErrorResult(context, err)
-	}
-
-	if err := handler.db.DB.Preload("Players").Find(&game, gameId).Error; err != nil {
-		return results.ServerErrorResult(context, err)
-	}
 
 	if game, err := handler.getGame(gameId); err != nil {
 		return results.ServerErrorResult(context, err)
