@@ -4,6 +4,7 @@ import (
 	"data_service/database"
 	"data_service/handlers/results"
 	"data_service/models"
+	"database/sql"
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
@@ -123,10 +124,20 @@ func (handler *GameHandler) StartRound(gameId uint, context *fiber.Ctx) error {
 
 func (handler *GameHandler) MakeBet(gameId, roundNumber uint, context *fiber.Ctx) error {
 	db := handler.db.DB
-	var stake models.Stake
+	payload := struct {
+		RoundID  uint `json:"roundId"`
+		PlayerID uint `json:"playerId"`
+		Bet      uint `json:"bet"`
+	}{}
 
-	if err := context.BodyParser(&stake); err != nil {
+	if err := context.BodyParser(&payload); err != nil {
 		return results.BadRequestResult(context, err)
+	}
+
+	stake := models.Stake{
+		RoundID:  payload.RoundID,
+		PlayerID: payload.PlayerID,
+		Bet:      payload.Bet,
 	}
 
 	var round models.Round
@@ -138,6 +149,42 @@ func (handler *GameHandler) MakeBet(gameId, roundNumber uint, context *fiber.Ctx
 	stake.RoundID = round.ID
 
 	if err := db.Create(&stake).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	game, err := handler.getGame(gameId)
+	if err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	return results.OkResult(context, game)
+}
+
+func (handler *GameHandler) SetBribe(gameId, roundNumber uint, context *fiber.Ctx) error {
+	db := handler.db.DB
+	payload := struct {
+		PlayerID uint `json:"playerId"`
+		Bribe    int  `json:"birbe"`
+	}{}
+
+	if err := context.BodyParser(&payload); err != nil {
+		return results.BadRequestResult(context, err)
+	}
+
+	var round models.Round
+
+	if err := db.Where("game_id = ?", gameId).Where("number = ?", roundNumber).Find(&round).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	var stake models.Stake
+
+	if err := db.Where("round_id = ?", round.ID).Where("player_id = ?", payload.PlayerID).Find(&stake).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	stake.Bribe = &models.JsonNullInt16{sql.NullInt16{Valid: true, Int16: int16(payload.PlayerID)}}
+	if err := db.Save(&stake).Error; err != nil {
 		return results.ServerErrorResult(context, err)
 	}
 

@@ -14,9 +14,10 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 
 	// Read all Players
 	rootRouter.Get("/", func(ctx *fiber.Ctx) error {
+		username := ctx.Query("username")
 		identificator := ctx.Query("identificator")
 
-		return handler.GetAll(ctx, identificator)
+		return handler.GetAll(ctx, username, identificator)
 	})
 
 	// Read the Player with specified id

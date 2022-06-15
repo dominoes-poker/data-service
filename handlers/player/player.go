@@ -23,10 +23,14 @@ func New(db *database.DataBase) *PlayerHandler {
 	return instance
 }
 
-func (handler *PlayerHandler) GetAll(ctx *fiber.Ctx, identificator string) error {
+func (handler *PlayerHandler) GetAll(ctx *fiber.Ctx, username, identificator string) error {
 	var players []models.Player
 
 	query := handler.db.DB
+
+	if len(username) > 0 {
+		query = query.Where("Username = ?", username)
+	}
 
 	if len(identificator) > 0 {
 		query = query.Where("Identificator = ?", identificator)

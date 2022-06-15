@@ -41,7 +41,7 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 	})
 
 	// User make a bet
-	rootRouter.Post("/:gameId/round/:roundNumber/make-bet", func(context *fiber.Ctx) error {
+	rootRouter.Post("/:gameId/round/:roundNumber/bet", func(context *fiber.Ctx) error {
 
 		gameId, err := routerUtils.GetUintParam(context, "gameId")
 		if err != nil {
@@ -54,6 +54,22 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 		}
 
 		return handler.MakeBet(gameId, roundNumber, context)
+	})
+
+	// Set a bribe
+	rootRouter.Post("/:gameId/round/:roundNumber/bribe", func(context *fiber.Ctx) error {
+
+		gameId, err := routerUtils.GetUintParam(context, "gameId")
+		if err != nil {
+			return results.BadRequestResult(context, err)
+		}
+
+		roundNumber, err := routerUtils.GetUintParam(context, "roundNumber")
+		if err != nil {
+			return results.BadRequestResult(context, err)
+		}
+
+		return handler.SetBribe(gameId, roundNumber, context)
 	})
 
 }
