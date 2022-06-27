@@ -183,7 +183,7 @@ func (handler *GameHandler) SetBribe(gameId, roundNumber uint, context *fiber.Ct
 		return results.ServerErrorResult(context, err)
 	}
 
-	stake.Bribe = &models.JsonNullInt16{sql.NullInt16{Valid: true, Int16: int16(payload.PlayerID)}}
+	stake.Bribe = &models.JsonNullInt16{sql.NullInt16{Valid: true, Int16: int16(payload.Bribe)}}
 	if err := db.Save(&stake).Error; err != nil {
 		return results.ServerErrorResult(context, err)
 	}

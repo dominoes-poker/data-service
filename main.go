@@ -7,10 +7,12 @@ import (
 )
 
 func main() {
-	db_url := config.Config(constants.ENV_FILE, constants.DB_URL_KEY_NAME)
-	db := database.SetupDatabase(db_url)
+	app := CreateApp()
 
-	app := CreateApp(db)
+	var db_url string = config.Config(constants.ENV_FILE, constants.DB_URL_KEY_NAME)
+	var db *database.DataBase = database.SetupDatabase(db_url)
+	SetupRoutes(app, "api", db)
+
 	if err := app.Listen(":3000"); err != nil {
 		panic("Cannot run application")
 	}

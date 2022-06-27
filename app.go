@@ -8,13 +8,27 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func CreateApp(db *database.DataBase) *fiber.App {
-	// Start a new fiber app
-	app := fiber.New()
-	app.Use(logger.New(logger.Config{
-		Format: "[${ip}]:${port} ${status} - ${method} ${path}?${queryParams}\n",
-	}))
-	api := app.Group("/api")
-	router.SetupRoutes(api, db)
+func CreateApp() *fiber.App {
+	var app *fiber.App = fiber.New()
+	setupLoger(app)
 	return app
+}
+
+func SetupRoutes(app *fiber.App, apiPreffix string, db *database.DataBase) fiber.Router {
+	var api fiber.Router = app.Group(apiPreffix)
+	router.SetupRoutes(api, db)
+	return api
+}
+
+func createLogger() fiber.Handler {
+	const loggerFormat = "[${ip}]:${port} ${status} - ${method} ${path}?${queryParams}\n"
+	var loggerConfig logger.Config = logger.Config{
+		Format: loggerFormat,
+	}
+	return logger.New(loggerConfig)
+}
+
+func setupLoger(app *fiber.App) {
+	var logger fiber.Handler = createLogger()
+	app.Use(logger)
 }
