@@ -72,4 +72,15 @@ func Setup(rootRouter fiber.Router, db *database.DataBase) {
 		return handler.SetBribe(gameId, roundNumber, context)
 	})
 
+	//Finish the game
+	rootRouter.Put("/:gameId/finish", func(context *fiber.Ctx) error {
+
+		gameId, err := routerUtils.GetUintParam(context, "gameId")
+		if err != nil {
+			return results.BadRequestResult(context, err)
+		}
+
+		return handler.Finish(gameId, context)
+	})
+
 }

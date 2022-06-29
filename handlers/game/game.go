@@ -195,3 +195,19 @@ func (handler *GameHandler) SetBribe(gameId, roundNumber uint, context *fiber.Ct
 
 	return results.OkResult(context, game)
 }
+
+func (handler *GameHandler) Finish(gameId uint, context *fiber.Ctx) error {
+	db := handler.db.DB
+	var game models.Game
+
+	game, err := handler.getGame(gameId)
+	if err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+
+	game.IsOver = true
+	if err := db.Save(&game).Error; err != nil {
+		return results.ServerErrorResult(context, err)
+	}
+	return results.OkResult(context, game)
+}
